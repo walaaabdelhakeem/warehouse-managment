@@ -1,0 +1,166 @@
+<div class="container mt-4">
+  <h2 class="text-center text-primary">إضافة مصروف</h2>
+  <form [formGroup]="addExpenseForm" (ngSubmit)="saveExpense()"
+    class="shadow p-4 rounded bg-light">
+    
+    <!-- الوحدات -->
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="unitName" class="form-label">اسم الوحدة</label>
+        <select id="unitName" class="form-select" formControlName="unitName"
+          (change)="onUnitChange()" required>
+          <option value>اختر الوحدة</option>
+          @for (unit of availableUnits; track unit) {
+            <option [value]="unit.unitName">{{ unit.unitName }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label for="receiver" class="form-label">المستلم</label>
+        <select id="receiver" class="form-select" formControlName="receiver" required>
+          <option value>اختر المستلم</option>
+          @for (recipient of recipients; track recipient) {
+            <option [value]="recipient">{{ recipient }}</option>
+          }
+          <option value="other">اسم مستلم جديد</option>
+        </select>
+      </div>
+
+      @if (addExpenseForm.get('receiver')?.value === 'other') {
+        <div class="col-md-6 mb-3">
+          <label for="newReceiver" class="form-label">اسم المستلم الجديد</label>
+          <input
+            type="text"
+            id="newReceiver"
+            class="form-control"
+            formControlName="newReceiver"
+            placeholder="أدخل اسم المستلم الجديد"
+            required>
+        </div>
+      }
+    </div>
+
+    <!-- النوع -->
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="type" class="form-label">النوع</label>
+        <select id="type" class="form-select" formControlName="type" required>
+          <option value>اختر النوع</option>
+          <option value="مناقله">مناقله</option>
+          <option value="نموذج صرف">نموذج صرف</option>
+          <option value="اخرى">اخرى</option>
+        </select>
+      </div>
+
+      @if (addExpenseForm.get('type')?.value === 'نموذج صرف') {
+        <div class="col-md-6 mb-3">
+          <label for="documentNumber" class="form-label">رقم المستند</label>
+          <input type="text" id="documentNumber" class="form-control"
+            formControlName="documentNumber" required>
+        </div>
+      }
+
+      @if (addExpenseForm.get('documentNumber')?.hasError('duplicateDocumentNumber') 
+            && addExpenseForm.get('documentNumber')?.touched) {
+        <div class="text-danger">
+          رقم السند مستخدم بالفعل لنموذج صرف. يرجى إدخال رقم فريد.
+        </div>
+      }
+    </div>
+
+    <!-- التاريخ -->
+    <div class="row mb-3" formGroupName="dateForm">
+      <div class="d-flex gap-3">
+        <input type="number" class="form-control" formControlName="day" placeholder="اليوم">
+        <input type="number" class="form-control" formControlName="month" placeholder="الشهر">
+        <input type="number" class="form-control" formControlName="year" placeholder="السنة">
+      </div>
+    </div>
+
+    <!-- العناصر -->
+    <div class="mb-3">
+  <label for="items" class="form-label">العناصر</label>
+  <div *ngFor="let item of items.controls; let i = index" [formGroup]="item"
+    class="d-flex align-items-center mb-2">
+    
+    <select class="form-select me-2" formControlName="itemName" required>
+      <option value="">اختر العنصر</option>
+      <option *ngFor="let availableItem of availableItems" [value]="availableItem.itemName">
+        {{ availableItem.itemName }}
+      </option>
+    </select>
+
+    <input type="number" class="form-control me-2"
+      formControlName="quantity" placeholder="الكمية" required>
+
+    <button type="button" class="btn btn-danger" (click)="items.removeAt(i)">حذف</button>
+  </div>
+
+  <button type="button" class="btn btn-secondary"
+    (click)="addItem({ itemName: '', quantity: null })">
+    إضافة عنصر
+  </button>
+</div>
+
+
+    <!-- مرفق -->
+    <div class="mb-3">
+      <label for="attachment" class="form-label">إرفاق ملف (PDF أو صورة)</label>
+      <input type="file" id="attachment" class="form-control"
+        (change)="handleFileInput($event)" required>
+    </div>
+
+    <button type="submit"
+      class="btn btn-primary w-100"
+      [disabled]="
+        addExpenseForm.invalid 
+        || items.length === 0 
+        || (addExpenseForm.get('type')?.value === 'نموذج صرف' 
+            && !addExpenseForm.get('documentNumber')?.value)
+      ">
+      إضافة المصروف
+    </button>
+  </form>
+
+  <!-- جدول -->
+  <h3 class="mt-4 text-primary">المصروفات</h3>
+  <table class="table table-bordered table-hover">
+    <thead class="table-primary">
+      <tr>
+        <th>اسم الوحدة</th>
+        <th>العناصر</th>
+        <th>المستلم</th>
+        <th>النوع</th>
+        <th>رقم المستند</th>
+        <th>التاريخ </th>
+        <th>الملف المرفق</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (expense of expenses.slice(0,10); track expense) {
+        <tr>
+          <td>{{ expense.unitName }}</td>
+          <td>
+            <ul>
+              @for (item of expense.items; track item) {
+                <li>{{ item.itemName }} - الكمية: {{ item.quantity }}</li>
+              }
+            </ul>
+          </td>
+          <td>{{ expense.receiver }}</td>
+          <td>{{ expense.type }}</td>
+          <td>{{ expense.documentNumber }}</td>
+          <td>{{ expense.displayDate }}</td>
+          <td>
+            @if (expense.attachment) {
+              <a [href]="expense.attachment" download="attachment" target="_blank">تحميل الملف</a>
+            } @else {
+              <span>لا يوجد</span>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

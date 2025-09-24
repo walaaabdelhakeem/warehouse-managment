@@ -1,0 +1,47 @@
+<div class="container-fluid py-5" dir="rtl">
+  <div class="row">
+    <!-- Sidebar -->
+    <nav class="col-12 col-md-3 col-lg-2 mb-4 mb-md-0 pe-0">
+      <div class="sidebar bg-white rounded shadow-sm p-3 h-100 sticky-top">
+        <div class="text-center mb-4">
+          <a [routerLink]="['/dashboard']">
+            <img src="/image.png" alt="شعار مدير المستودع"
+              style="max-width: 200px; max-height: 150px;">
+          </a>
+        </div>
+        <h5 style="margin-right: 40px;" class="mb-4 text-center">القائمة الرئيسية</h5>
+        
+        <ul class="nav flex-column gap-2 text-center">
+          @for (feature of filteredFeatures; track feature) {
+            <li class="nav-item">
+              <a
+                [routerLink]="feature.link"
+                routerLinkActive="active"
+                class="nav-link d-flex align-items-center sidebar-link px-3 py-2 rounded transition">
+
+                <div
+                  class="icon-box d-flex align-items-center justify-content-center me-2">
+                  <i [class]="feature.icon + ' fs-5'"></i>
+                </div>
+
+                <span class="text-nowrap flex-grow-1 text-end me-2">{{ feature.label }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+
+        <button class="btn btn-danger w-100 mt-3" (click)="logout()">خروج</button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="col-12 col-md-9 col-lg-10">
+      @if (!isChildRouteActive()) {
+        <ng-container>
+          <!-- محتوى يظهر لما مفيش child route -->
+        </ng-container>
+      }
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
